@@ -53,6 +53,32 @@ public final class Hospital {
                         role TEXT NOT NULL
                     );
                 """);
+
+            // Create Room table
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS Room (
+                    roomNumber INTEGER PRIMARY KEY,
+                    capacity INTEGER DEFAULT 1,
+                    type TEXT NOT NULL
+                );
+            """);
+
+            // Create RoomAssignment table
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS RoomAssignment (
+                    roomNumber INTEGER NOT NULL,
+                    nationalCode TEXT NOT NULL,
+                    PRIMARY KEY (roomNumber, nationalCode),
+                    FOREIGN KEY (roomNumber) REFERENCES Room (roomNumber),
+                    FOREIGN KEY (nationalCode) REFERENCES (
+                        SELECT nationalCode FROM (
+                            SELECT nationalCode FROM Patient
+                            UNION ALL
+                            SELECT nationalCode FROM Staff
+                        )
+                    )
+                );
+            """);
         }
     }
 
@@ -178,7 +204,7 @@ public final class Hospital {
         return results;
     }
 
-    public List<Person> searchAll(String query) throws SQLException {
+    public List<Person> searchPeople(String query) throws SQLException {
         List<Person> results = new ArrayList<>();
 
         results.addAll(searchPatients(query));
@@ -217,5 +243,43 @@ public final class Hospital {
 
         return people;
     }
-}
 
+    public boolean addRoom(Room room) throws SQLException {
+        if (!room.isValid()) {
+            return false;
+        }
+
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "INSERT INTO Room (roomNumber, capacity, type) VALUES (?, ?, ?)")) {
+            pstmt.setInt(1, room.getNumber());
+            pstmt.setInt(2, room.getCapacity());
+            pstmt.setString(3, room.getType());
+            pstmt.executeUpdate();
+            System.out.println("Room " + room.getNumber() + " added successfully.");
+            return true;
+        }
+    }
+
+    public void assignToRoom(int roomNumber, String nationalCode) throws SQLException {
+        // Check if the room exists
+        try (PreparedStatement roomCheck = connectionDB.prepareStatement(
+                "SELECT COUNT(*) AS count FROM Room WHERE roomNumber = ?")) {
+            roomCheck.setInt(1, roomNumber);
+            try (ResultSet rs = roomCheck.executeQuery()) {
+                if (rs.getInt("count") == 0) {
+                    throw new SQLException("Room " + roomNumber + " does not exist.");
+                }
+            }
+        }
+
+        // Assign the person to the room
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "INSERT INTO RoomAssignment (roomNumber, nationalCode) VALUES (?, ?)")) {
+            pstmt.setInt(1, roomNumber);
+            pstmt.setString(2, nationalCode);
+            pstmt.executeUpdate();
+            System.out.println("Assigned nationalCode " + nationalCode + " to room " + roomNumber);
+        }
+    }
+
+}

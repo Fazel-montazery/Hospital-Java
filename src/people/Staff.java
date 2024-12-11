@@ -5,7 +5,7 @@ public class Staff extends Person {
 
     public Staff(String name, String nationalId, String role) {
         super(name, nationalId);
-        this.role = role;
+        this.role = (role == null) ? "" : role;
     }
 
     public String getRole() {
@@ -14,5 +14,13 @@ public class Staff extends Person {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    @Override
+    public boolean isValid() {
+        if (role.isBlank() || nationalId.isBlank() || name.isBlank())
+            return false;
+
+        return true;
     }
 }

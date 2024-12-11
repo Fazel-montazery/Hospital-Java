@@ -1,6 +1,6 @@
 package people;
 
-public class Person {
+public abstract class Person {
     protected String name;
     protected String nationalId;
 
@@ -24,4 +24,6 @@ public class Person {
     public void setNationalId(String nationalId) {
         this.nationalId = nationalId;
     }
+
+    abstract public boolean isValid();
 }

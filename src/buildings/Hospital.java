@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import people.Patient;
+import people.Person;
 import people.Staff;
 
 public final class Hospital {
@@ -74,7 +75,7 @@ public final class Hospital {
             return false;
 
         try (PreparedStatement pstmt = connectionDB.prepareStatement(
-                "INSERT INTO Patient (nationalCode, name, role) VALUES (?, ?, ?)")) {
+                "INSERT INTO Staff (nationalCode, name, role) VALUES (?, ?, ?)")) {
             pstmt.setString(1, staff.getNationalId());
             pstmt.setString(2, staff.getName());
             pstmt.setString(3, staff.getRole());
@@ -147,6 +148,45 @@ public final class Hospital {
         }
     }
 
+    public List<Patient> searchPatients(String query) throws SQLException {
+        List<Patient> results = new ArrayList<>();
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "SELECT * FROM Patient WHERE name LIKE ? OR nationalCode LIKE ?")) {
+            pstmt.setString(1, "%" + query + "%");
+            pstmt.setString(2, "%" + query + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new Patient(rs.getString("name"), rs.getString("nationalCode"), rs.getString("illness")));
+                }
+            }
+        }
+        return results;
+    }
+
+    public List<Staff> searchStaff(String query) throws SQLException {
+        List<Staff> results = new ArrayList<>();
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "SELECT * FROM Staff WHERE name LIKE ? OR nationalCode LIKE ?")) {
+            pstmt.setString(1, "%" + query + "%");
+            pstmt.setString(2, "%" + query + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new Staff(rs.getString("name"), rs.getString("nationalCode"), rs.getString("role")));
+                }
+            }
+        }
+        return results;
+    }
+
+    public List<Person> searchAll(String query) throws SQLException {
+        List<Person> results = new ArrayList<>();
+
+        results.addAll(searchPatients(query));
+        results.addAll(searchStaff(query));
+
+        return results;
+    }
+
     public List<Patient> getPatients() throws SQLException {
         List<Patient> patients = new ArrayList<>();
         try (Statement stmt = connectionDB.createStatement();
@@ -167,6 +207,15 @@ public final class Hospital {
             }
         }
         return staff;
+    }
+
+    public List<Person> getPeople() throws SQLException {
+        List<Person> people = new ArrayList<>();
+
+        people.addAll(getPatients());
+        people.addAll(getStaff());
+
+        return people;
     }
 }
 

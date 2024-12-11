@@ -83,6 +83,37 @@ public final class Hospital {
         }
     }
 
+    public boolean deletePatient(String nationalCode) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "DELETE FROM Patient WHERE nationalCode = ?")) {
+            pstmt.setString(1, nationalCode);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No patient found with nationalCode: " + nationalCode);
+                return false;
+            } else {
+                System.out.println("Patient with nationalCode " + nationalCode + " deleted successfully.");
+                return true;
+            }
+        }
+    }
+
+    public boolean deleteStaff(String nationalCode) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "DELETE FROM Staff WHERE nationalCode = ?")) {
+            pstmt.setString(1, nationalCode);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No staff found with nationalCode: " + nationalCode);
+                return false;
+            } else {
+                System.out.println("Staff with nationalCode " + nationalCode + " deleted successfully.");
+                return true;
+            }
+        }
+    }
+
+
     public List<Patient> getPatients() throws SQLException {
         List<Patient> patients = new ArrayList<>();
         try (Statement stmt = connectionDB.createStatement();

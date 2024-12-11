@@ -25,5 +25,13 @@ public abstract class Person {
         this.nationalId = nationalId;
     }
 
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", nationalId='" + nationalId + '\'' +
+                '}';
+    }
+
     abstract public boolean isValid();
 }

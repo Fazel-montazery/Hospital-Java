@@ -1,10 +1,11 @@
 package buildings;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import people.Patient;
 import people.Staff;
-
-import java.util.ArrayList;
 
 public final class Hospital {
     // The internal instance
@@ -80,6 +81,28 @@ public final class Hospital {
             pstmt.executeUpdate();
             return true;
         }
+    }
+
+    public List<Patient> getPatients() throws SQLException {
+        List<Patient> patients = new ArrayList<>();
+        try (Statement stmt = connectionDB.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Patient")) {
+            while (rs.next()) {
+                patients.add(new Patient(rs.getString("name"), rs.getString("nationalCode"), rs.getString("illness")));
+            }
+        }
+        return patients;
+    }
+
+    public List<Staff> getStaff() throws SQLException {
+        List<Staff> staff = new ArrayList<>();
+        try (Statement stmt = connectionDB.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Staff")) {
+            while (rs.next()) {
+                staff.add(new Staff(rs.getString("name"), rs.getString("nationalCode"), rs.getString("role")));
+            }
+        }
+        return staff;
     }
 }
 

@@ -113,6 +113,39 @@ public final class Hospital {
         }
     }
 
+    public boolean updatePatient(String nationalCode, String newName, String newIllness) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "UPDATE Patient SET name = ?, illness = ? WHERE nationalCode = ?")) {
+            pstmt.setString(1, newName);
+            pstmt.setString(2, newIllness);
+            pstmt.setString(3, nationalCode);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No patient found with nationalCode: " + nationalCode);
+                return false;
+            } else {
+                System.out.println("Patient with nationalCode " + nationalCode + " updated successfully.");
+                return true;
+            }
+        }
+    }
+
+    public boolean updateStaff(String nationalCode, String newName, String newRole) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "UPDATE Staff SET name = ?, role = ? WHERE nationalCode = ?")) {
+            pstmt.setString(1, newName);
+            pstmt.setString(2, newRole);
+            pstmt.setString(3, nationalCode);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No staff found with nationalCode: " + nationalCode);
+                return false;
+            } else {
+                System.out.println("Staff with nationalCode " + nationalCode + " updated successfully.");
+                return true;
+            }
+        }
+    }
 
     public List<Patient> getPatients() throws SQLException {
         List<Patient> patients = new ArrayList<>();

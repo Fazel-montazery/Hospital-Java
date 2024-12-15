@@ -69,16 +69,10 @@ public final class Hospital {
                     roomNumber INTEGER NOT NULL,
                     nationalCode TEXT NOT NULL,
                     PRIMARY KEY (roomNumber, nationalCode),
-                    FOREIGN KEY (roomNumber) REFERENCES Room (roomNumber),
-                    FOREIGN KEY (nationalCode) REFERENCES (
-                        SELECT nationalCode FROM (
-                            SELECT nationalCode FROM Patient
-                            UNION ALL
-                            SELECT nationalCode FROM Staff
-                        )
-                    )
+                    FOREIGN KEY (roomNumber) REFERENCES Room (roomNumber)
                 );
             """);
+
         }
     }
 

@@ -12,7 +12,10 @@ import UI.HospitalManagementUI;
 
 public class Test {
     public static void main(String[] args) throws SQLException {
-        // Hospital mehrgan = Hospital.getInstance();
+        Hospital mehrgan = Hospital.getInstance();
+        for (Patient p : mehrgan.getPatients()) {
+            System.out.println(p);
+        }
         SwingUtilities.invokeLater(() -> {
             HospitalManagementUI ui = new HospitalManagementUI();
             ui.setVisible(true);

@@ -13,7 +13,7 @@ public final class Hospital {
     private static Hospital instance;
 
     // Sqlite connection
-    private Connection connectionDB;
+    private static Connection connectionDB;
 
     private Hospital() {
         try {

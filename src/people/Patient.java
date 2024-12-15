@@ -22,5 +22,5 @@ public class Patient extends Person {
             return false;
 
         return true;
-    }
+    }   
 }

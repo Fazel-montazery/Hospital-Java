@@ -1,9 +1,14 @@
 package UI;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import buildings.Hospital;
+import people.Staff;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 public class StaffPanel extends JPanel {
     private JTable staffTable;
@@ -79,7 +84,21 @@ public class StaffPanel extends JPanel {
         String role = roleField.getText();
         String department = departmentField.getText();
         tableModel.addRow(new Object[]{name, role, department});
-    }
+        Staff newStaff = new Staff(name, role, department);
+        try {
+                boolean added = Hospital.getInstance().addStaff(newStaff);
+                if (added) {
+                    System.out.println("Staff added successfully!");
+                } else {
+                    System.out.println("Failed to add Staff.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error adding patient to the database.");
+            }
+        } 
+        
+    
 
     private void editStaff() {
         int selectedRow = staffTable.getSelectedRow();

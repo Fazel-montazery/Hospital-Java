@@ -1,20 +1,25 @@
 package UI;
+
+import people.Patient;
+import buildings.*;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 public class PatientPanel extends JPanel {
     private JTable patientTable;
     private DefaultTableModel tableModel;
-    private JTextField nameField, ageField, conditionField;
+    private JTextField nameField, Agefield, nationalId, conditionField;
 
     public PatientPanel() {
         setLayout(new BorderLayout());
 
         // Create the table model and table
-        tableModel = new DefaultTableModel(new String[]{"Name", "Age", "Condition"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Name", "Age", "NationalID", "Condition"}, 0);
         patientTable = new JTable(tableModel);
         
         // Add the table to a scroll pane
@@ -22,15 +27,19 @@ public class PatientPanel extends JPanel {
 
         // Create the form fields
         JPanel formPanel = new JPanel();
-        formPanel.setLayout(new GridLayout(3, 2));
+        formPanel.setLayout(new GridLayout(4, 2));
 
         formPanel.add(new JLabel("Name:"));
         nameField = new JTextField();
         formPanel.add(nameField);
+        
+        formPanel.add(new JLabel("Age"));
+        Agefield = new JTextField();
+        formPanel.add(Agefield);
 
-        formPanel.add(new JLabel("Age:"));
-        ageField = new JTextField();
-        formPanel.add(ageField);
+        formPanel.add(new JLabel("NationalID:"));
+        nationalId = new JTextField();
+        formPanel.add(nationalId);
 
         formPanel.add(new JLabel("Condition:"));
         conditionField = new JTextField();
@@ -74,18 +83,44 @@ public class PatientPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    // Create a new Patient instance
     private void addPatient() {
+        // Retrieve values from the text fields
         String name = nameField.getText();
-        int age = Integer.parseInt(ageField.getText());
+        String ID = nationalId.getText();
         String condition = conditionField.getText();
-        tableModel.addRow(new Object[]{name, age, condition});
+    
+        // Create a new Patient instance
+        Patient newPatient = new Patient(name, ID, condition);
+    
+        if (newPatient.isValid()) {
+            // Add patient data to the table
+            tableModel.addRow(new Object[]{name, ID, condition});
+    
+            try {
+                boolean added = Hospital.getInstance().addPatient(newPatient);
+                if (added) {
+                    System.out.println("Patient added successfully!");
+                } else {
+                    System.out.println("Failed to add patient.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error adding patient to the database.");
+            }
+        } else {
+            System.out.println("Patient information is not valid.");
+        }
     }
+        
+
+    
 
     private void editPatient() {
         int selectedRow = patientTable.getSelectedRow();
         if (selectedRow >= 0) {
             tableModel.setValueAt(nameField.getText(), selectedRow, 0);
-            tableModel.setValueAt(ageField.getText(), selectedRow, 1);
+            tableModel.setValueAt(nationalId.getText(), selectedRow, 1);
             tableModel.setValueAt(conditionField.getText(), selectedRow, 2);
         }
     }

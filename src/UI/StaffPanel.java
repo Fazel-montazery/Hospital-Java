@@ -1,6 +1,6 @@
 package UI;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+
+import java.util.List;
 
 import buildings.Hospital;
 import people.Staff;
@@ -9,17 +9,19 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class StaffPanel extends JPanel {
     private JTable staffTable;
     private DefaultTableModel tableModel;
-    private JTextField nameField, roleField, departmentField;
+    private JTextField nameField, roleField, NationalIDField;
 
     public StaffPanel() {
         setLayout(new BorderLayout());
 
         // Create the table model and table
-        tableModel = new DefaultTableModel(new String[]{"Name", "Role", "Department"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Name", "Role", "NationalId"}, 0);
         staffTable = new JTable(tableModel);
         
         // Add the table to a scroll pane
@@ -37,9 +39,9 @@ public class StaffPanel extends JPanel {
         roleField = new JTextField();
         formPanel.add(roleField);
 
-        formPanel.add(new JLabel("Department:"));
-        departmentField = new JTextField();
-        formPanel.add(departmentField);
+        formPanel.add(new JLabel("NationalId:"));
+        NationalIDField = new JTextField();
+        formPanel.add(NationalIDField);
 
         // Create the buttons
         JPanel buttonPanel = new JPanel();
@@ -77,14 +79,28 @@ public class StaffPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
         add(formPanel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.SOUTH);
+
+        loadStaffFromDatabase();
+    }
+
+    private void loadStaffFromDatabase() {
+        try {
+            List<Staff> staffList = Hospital.getInstance().getStaff();
+            for (Staff staff : staffList) {
+                tableModel.addRow(new Object[]{staff.getName(), staff.getRole(), staff.getNationalId()});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading staff from database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void addStaff() {
         String name = nameField.getText();
         String role = roleField.getText();
-        String department = departmentField.getText();
-        tableModel.addRow(new Object[]{name, role, department});
-        Staff newStaff = new Staff(name, role, department);
+        String NationalId = NationalIDField.getText();
+        tableModel.addRow(new Object[]{name, role, NationalId});
+        Staff newStaff = new Staff(name, role, NationalId);
         try {
                 boolean added = Hospital.getInstance().addStaff(newStaff);
                 if (added) {
@@ -94,7 +110,7 @@ public class StaffPanel extends JPanel {
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
-                System.out.println("Error adding patient to the database.");
+                System.out.println("Error adding Staff to the database.");
             }
         } 
         
@@ -102,17 +118,53 @@ public class StaffPanel extends JPanel {
 
     private void editStaff() {
         int selectedRow = staffTable.getSelectedRow();
+
         if (selectedRow >= 0) {
-            tableModel.setValueAt(nameField.getText(), selectedRow, 0);
-            tableModel.setValueAt(roleField.getText(), selectedRow, 1);
-            tableModel.setValueAt(departmentField.getText(), selectedRow, 2);
+           String newName = nameField.getText();
+           String newRole = roleField.getText();
+           String newNationalId = NationalIDField.getText();
+    
+          String originalNationalId = (String) tableModel.getValueAt(selectedRow, 2);
+    
+       try {
+           boolean updated = Hospital.getInstance().updateStaff(originalNationalId, newName, newRole);
+    
+           if (updated) {
+               tableModel.setValueAt(newName, selectedRow, 0);
+               tableModel.setValueAt(newRole, selectedRow, 1);
+               tableModel.setValueAt(newNationalId, selectedRow, 2);
+    
+                System.out.println("Staff updated successfully.");
+            } else {
+                System.out.println("Failed to update staff.");
+            }
+        } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error updating staff in the database.");
+            }
         }
     }
 
     private void deleteStaff() {
         int selectedRow = staffTable.getSelectedRow();
+    
         if (selectedRow >= 0) {
-            tableModel.removeRow(selectedRow);
-        }
-    }
+            String nationalId = (String) tableModel.getValueAt(selectedRow, 2);
+    
+            try {
+                boolean deleted = Hospital.getInstance().deleteStaff(nationalId);
+
+                if (deleted) {
+                    tableModel.removeRow(selectedRow);
+                    System.out.println("Staff deleted successfully.");
+                } else {
+                   System.out.println("Failed to delete staff.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error deleting staff from the database.");
+            }
+        } 
+   }
 }
+

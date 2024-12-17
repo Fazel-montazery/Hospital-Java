@@ -23,4 +23,13 @@ public class Staff extends Person {
 
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Staff{" +
+                "role='" + role + '\'' +
+                ", name='" + name + '\'' +
+                ", nationalId='" + nationalId + '\'' +
+                '}';
+    }
 }

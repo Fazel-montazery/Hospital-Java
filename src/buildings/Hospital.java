@@ -1,6 +1,11 @@
 package buildings;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +20,9 @@ public final class Hospital {
     // Sqlite connection
     private static Connection connectionDB;
 
+    // Writer for log files
+    private static FileWriter writer;
+
     private Hospital() {
         try {
             // Initialize SQLite connection
@@ -23,6 +31,14 @@ public final class Hospital {
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize database.");
+        }
+
+        try {
+            // Initialize the log writer
+            writer = new FileWriter(getNextLogFileName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize log writer.");
         }
     }
 
@@ -76,6 +92,29 @@ public final class Hospital {
         }
     }
 
+    private static String getNextLogFileName() {
+        int logNumber = 0;
+        String fileName;
+
+        while (true) {
+            fileName = String.format("log/log%02d.txt", logNumber);
+            File file = new File(fileName);
+
+            if (!file.exists()) {
+                break;
+            }
+
+            logNumber++;
+        }
+        return fileName;
+    }
+
+    private static String getCurrentDateTime() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return "[" + currentDateTime.format(formatter) + "]";
+    }
+
     public boolean addPatient(Patient patient) throws SQLException {
         if (!patient.isValid())
             return false;
@@ -86,7 +125,11 @@ public final class Hospital {
             pstmt.setString(2, patient.getName());
             pstmt.setString(3, patient.getIllness());
             pstmt.executeUpdate();
+            writer.write(getCurrentDateTime() + "=> addPatient => " + patient);
+            writer.flush();
             return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -100,7 +143,11 @@ public final class Hospital {
             pstmt.setString(2, staff.getName());
             pstmt.setString(3, staff.getRole());
             pstmt.executeUpdate();
+            writer.write(getCurrentDateTime() + "=> addStaff => " + staff);
+            writer.flush();
             return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -114,8 +161,12 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Patient with nationalCode " + nationalCode + " deleted successfully.");
+                writer.write(getCurrentDateTime() + "=> deletePatient => " + nationalCode);
+                writer.flush();
                 return true;
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -129,8 +180,12 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Staff with nationalCode " + nationalCode + " deleted successfully.");
+                writer.write(getCurrentDateTime() + "=> deleteStaff => " + nationalCode);
+                writer.flush();
                 return true;
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -146,8 +201,12 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Patient with nationalCode " + nationalCode + " updated successfully.");
+                writer.write(getCurrentDateTime() + "=> updatePatient => " + nationalCode);
+                writer.flush();
                 return true;
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -163,8 +222,12 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Staff with nationalCode " + nationalCode + " updated successfully.");
+                writer.write(getCurrentDateTime() + "=> updateStaff => " + nationalCode);
+                writer.flush();
                 return true;
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -250,7 +313,11 @@ public final class Hospital {
             pstmt.setString(3, room.getType());
             pstmt.executeUpdate();
             System.out.println("Room " + room.getNumber() + " added successfully.");
+            writer.write(getCurrentDateTime() + "=> addRoom => " + room);
+            writer.flush();
             return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -273,7 +340,10 @@ public final class Hospital {
             pstmt.setString(2, nationalCode);
             pstmt.executeUpdate();
             System.out.println("Assigned nationalCode " + nationalCode + " to room " + roomNumber);
+            writer.write(getCurrentDateTime() + "=> assignToRoom[" + roomNumber + "] => " + nationalCode);
+            writer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
-
 }

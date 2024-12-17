@@ -37,4 +37,13 @@ public class Room {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Room{" +
+                "number=" + number +
+                ", capacity=" + capacity +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

@@ -1,6 +1,8 @@
 import buildings.Hospital;
 import people.Patient;
 import people.Staff;
+
+import java.io.IOException;
 import java.sql.SQLException;
 import javax.swing.SwingUtilities;
 import UI.HospitalManagementUI;

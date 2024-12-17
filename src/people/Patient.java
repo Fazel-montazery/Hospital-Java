@@ -22,5 +22,14 @@ public class Patient extends Person {
             return false;
 
         return true;
-    }   
+    }
+
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "illness='" + illness + '\'' +
+                ", name='" + name + '\'' +
+                ", nationalId='" + nationalId + '\'' +
+                '}';
+    }
 }

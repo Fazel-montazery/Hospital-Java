@@ -1,4 +1,8 @@
 package UI;
+import means.Hospital;
+import means.Room;
+import means.Tool;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -8,11 +12,12 @@ import java.awt.event.ActionListener;
 public class ResourcePanel extends JPanel {
     private JTable roomTable;
     private DefaultTableModel roomTableModel;
-    private JTextField roomNumberField, roomStatusField;
+    private JTextField roomNumberField, roomCapacityField, roomTypeField;
     
     private JTable toolTable;
     private DefaultTableModel toolTableModel;
-    private JTextField toolNameField, toolStatusField;
+    private JTextField toolNameField;
+    private JCheckBox toolStatusField;
 
     public ResourcePanel() {
         setLayout(new BorderLayout());
@@ -30,29 +35,40 @@ public class ResourcePanel extends JPanel {
         panel.setLayout(new BorderLayout());
 
         // Create the room table model and table
-        roomTableModel = new DefaultTableModel(new String[]{"Room Number", "Status"}, 0);
+        roomTableModel = new DefaultTableModel(new String[]{"Room Number", "Capacity", "Type"}, 0);
         roomTable = new JTable(roomTableModel);
         JScrollPane scrollPane = new JScrollPane(roomTable);
 
+        // Retrieve current rooms
+        try {
+            for (Room r : Hospital.getInstance().getRooms()) {
+                roomTableModel.addRow(new Object[]{r.getNumber(), r.getCapacity(), r.getType()});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Create the form fields for room management
-        JPanel formPanel = new JPanel(new GridLayout(2, 2));
+        JPanel formPanel = new JPanel(new GridLayout(3, 2));
 
         formPanel.add(new JLabel("Room Number:"));
         roomNumberField = new JTextField();
         formPanel.add(roomNumberField);
 
-        formPanel.add(new JLabel("Status:"));
-        roomStatusField = new JTextField();
-        formPanel.add(roomStatusField);
+        formPanel.add(new JLabel("Capacity:"));
+        roomCapacityField = new JTextField();
+        formPanel.add(roomCapacityField);
+
+        formPanel.add(new JLabel("Type:"));
+        roomTypeField = new JTextField();
+        formPanel.add(roomTypeField);
 
         // Create the buttons for room management
         JPanel buttonPanel = new JPanel();
         JButton addButton = new JButton("Add Room");
-        JButton editButton = new JButton("Edit Room");
         JButton deleteButton = new JButton("Delete Room");
 
         buttonPanel.add(addButton);
-        buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
 
         // Add action listeners to the buttons
@@ -60,13 +76,6 @@ public class ResourcePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 addRoom();
-            }
-        });
-
-        editButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                editRoom();
             }
         });
 
@@ -94,6 +103,15 @@ public class ResourcePanel extends JPanel {
         toolTable = new JTable(toolTableModel);
         JScrollPane scrollPane = new JScrollPane(toolTable);
 
+        // Retrieve current rooms
+        try {
+            for (Tool t : Hospital.getInstance().getTools()) {
+                toolTableModel.addRow(new Object[]{t.getName(), (t.isAvailable()) ? "Available" : "In Use"});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Create the form fields for tool management
         JPanel formPanel = new JPanel(new GridLayout(2, 2));
 
@@ -101,18 +119,16 @@ public class ResourcePanel extends JPanel {
         toolNameField = new JTextField();
         formPanel.add(toolNameField);
 
-        formPanel.add(new JLabel("Status:"));
-        toolStatusField = new JTextField();
+        formPanel.add(new JLabel("Is Available:"));
+        toolStatusField = new JCheckBox();
         formPanel.add(toolStatusField);
 
         // Create the buttons for tool management
         JPanel buttonPanel = new JPanel();
         JButton addButton = new JButton("Add Tool");
-        JButton editButton = new JButton("Edit Tool");
         JButton deleteButton = new JButton("Delete Tool");
 
         buttonPanel.add(addButton);
-        buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
 
         // Add action listeners to the buttons
@@ -120,13 +136,6 @@ public class ResourcePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 addTool();
-            }
-        });
-
-        editButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                editTool();
             }
         });
 
@@ -147,43 +156,68 @@ public class ResourcePanel extends JPanel {
 
     private void addRoom() {
         String roomNumber = roomNumberField.getText();
-        String status = roomStatusField.getText();
-        roomTableModel.addRow(new Object[]{roomNumber, status});
-    }
+        String roomCapcity = roomCapacityField.getText();
+        String roomType = roomTypeField.getText();
 
-    private void editRoom() {
-        int selectedRow = roomTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            roomTableModel.setValueAt(roomNumberField.getText(), selectedRow, 0);
-            roomTableModel.setValueAt(roomStatusField.getText(), selectedRow, 1);
+        try {
+            boolean result = Hospital.getInstance().addRoom(new Room(Integer.parseInt(roomNumber), Integer.parseInt(roomCapcity), roomType));
+            if (!result) {
+                System.out.println("Couldn't add the room!");
+            } else {
+                System.out.println("Room added successfully!");
+                roomTableModel.addRow(new Object[]{roomNumber, roomCapcity, roomType});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     private void deleteRoom() {
         int selectedRow = roomTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            roomTableModel.removeRow(selectedRow);
+        try {
+            if (selectedRow >= 0) {
+                int roomId = (int) roomTableModel.getValueAt(selectedRow, 0);
+                if (Hospital.getInstance().deleteRoom(roomId)) {
+                    roomTableModel.removeRow(selectedRow);
+                } else {
+                    System.out.println("Error deleting the room!");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     private void addTool() {
         String toolName = toolNameField.getText();
-        String status = toolStatusField.getText();
-        toolTableModel.addRow(new Object[]{toolName, status});
-    }
+        boolean toolStat = toolStatusField.isSelected();
 
-    private void editTool() {
-        int selectedRow = toolTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            toolTableModel.setValueAt(toolNameField.getText(), selectedRow, 0);
-            toolTableModel.setValueAt(toolStatusField.getText(), selectedRow, 1);
+        try {
+            boolean result = Hospital.getInstance().addTool(new Tool(toolName, toolStat));
+            if (!result) {
+                System.out.println("Couldn't add the tool!");
+            } else {
+                System.out.println("tool added successfully!");
+                toolTableModel.addRow(new Object[]{toolName, (toolStat) ? "Available" : "In Use"});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     private void deleteTool() {
         int selectedRow = toolTable.getSelectedRow();
-        if (selectedRow >= 0) {
-            toolTableModel.removeRow(selectedRow);
+        try {
+            if (selectedRow >= 0) {
+                String toolName = (String) toolTableModel.getValueAt(selectedRow, 0);
+                if (Hospital.getInstance().deleteTool(toolName)) {
+                    toolTableModel.removeRow(selectedRow);
+                } else {
+                    System.out.println("Error deleting the room!");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

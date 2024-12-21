@@ -1,4 +1,4 @@
-package buildings;
+package means;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -82,10 +82,21 @@ public final class Hospital {
             // Create RoomAssignment table
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS RoomAssignment (
-                    roomNumber INTEGER NOT NULL,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    personType TEXT NOT NULL CHECK (personType IN ('Patient', 'Staff')),
                     nationalCode TEXT NOT NULL,
-                    PRIMARY KEY (roomNumber, nationalCode),
-                    FOREIGN KEY (roomNumber) REFERENCES Room (roomNumber)
+                    roomId INTEGER NOT NULL,
+                    FOREIGN KEY (roomId) REFERENCES Room(roomNumber),
+                    UNIQUE(personType, nationalCode, roomId)
+                );
+            """);
+
+            // Create Tools table
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS Tool (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    status TEXT NOT NULL
                 );
             """);
 
@@ -125,7 +136,7 @@ public final class Hospital {
             pstmt.setString(2, patient.getName());
             pstmt.setString(3, patient.getIllness());
             pstmt.executeUpdate();
-            writer.write(getCurrentDateTime() + "=> addPatient => " + patient);
+            writer.write(getCurrentDateTime() + "=> addPatient => " + patient + "\n");
             writer.flush();
             return true;
         } catch (IOException e) {
@@ -143,7 +154,7 @@ public final class Hospital {
             pstmt.setString(2, staff.getName());
             pstmt.setString(3, staff.getRole());
             pstmt.executeUpdate();
-            writer.write(getCurrentDateTime() + "=> addStaff => " + staff);
+            writer.write(getCurrentDateTime() + "=> addStaff => " + staff + "\n");
             writer.flush();
             return true;
         } catch (IOException e) {
@@ -161,7 +172,7 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Patient with nationalCode " + nationalCode + " deleted successfully.");
-                writer.write(getCurrentDateTime() + "=> deletePatient => " + nationalCode);
+                writer.write(getCurrentDateTime() + "=> deletePatient => " + nationalCode + "\n");
                 writer.flush();
                 return true;
             }
@@ -180,7 +191,7 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Staff with nationalCode " + nationalCode + " deleted successfully.");
-                writer.write(getCurrentDateTime() + "=> deleteStaff => " + nationalCode);
+                writer.write(getCurrentDateTime() + "=> deleteStaff => " + nationalCode + "\n");
                 writer.flush();
                 return true;
             }
@@ -201,7 +212,7 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Patient with nationalCode " + nationalCode + " updated successfully.");
-                writer.write(getCurrentDateTime() + "=> updatePatient => " + nationalCode);
+                writer.write(getCurrentDateTime() + "=> updatePatient => " + nationalCode + "\n");
                 writer.flush();
                 return true;
             }
@@ -222,7 +233,7 @@ public final class Hospital {
                 return false;
             } else {
                 System.out.println("Staff with nationalCode " + nationalCode + " updated successfully.");
-                writer.write(getCurrentDateTime() + "=> updateStaff => " + nationalCode);
+                writer.write(getCurrentDateTime() + "=> updateStaff => " + nationalCode + "\n");
                 writer.flush();
                 return true;
             }
@@ -262,12 +273,14 @@ public final class Hospital {
     }
 
     public List<Person> searchPeople(String query) throws SQLException {
-        List<Person> results = new ArrayList<>();
-
-        results.addAll(searchPatients(query));
-        results.addAll(searchStaff(query));
-
-        return results;
+        if (query.isBlank()) {
+            return getPeople();
+        } else {
+            List<Person> results = new ArrayList<>();
+            results.addAll(searchPatients(query));
+            results.addAll(searchStaff(query));
+            return results;
+        }
     }
 
     public List<Patient> getPatients() throws SQLException {
@@ -313,7 +326,7 @@ public final class Hospital {
             pstmt.setString(3, room.getType());
             pstmt.executeUpdate();
             System.out.println("Room " + room.getNumber() + " added successfully.");
-            writer.write(getCurrentDateTime() + "=> addRoom => " + room);
+            writer.write(getCurrentDateTime() + "=> addRoom => " + room + "\n");
             writer.flush();
             return true;
         } catch (IOException e) {
@@ -340,8 +353,87 @@ public final class Hospital {
             pstmt.setString(2, nationalCode);
             pstmt.executeUpdate();
             System.out.println("Assigned nationalCode " + nationalCode + " to room " + roomNumber);
-            writer.write(getCurrentDateTime() + "=> assignToRoom[" + roomNumber + "] => " + nationalCode);
+            writer.write(getCurrentDateTime() + "=> assignToRoom[" + roomNumber + "] => " + nationalCode + "\n");
             writer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Room> getRooms() throws SQLException {
+        List<Room> rooms = new ArrayList<>();
+        try (Statement stmt = connectionDB.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Room")) {
+             while (rs.next()) {
+                 rooms.add(new Room(rs.getInt("roomNumber"),rs.getInt("capacity"), rs.getString("type")));
+             }
+        }
+        return rooms;
+    }
+
+    public boolean deleteRoom(int roomId) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "DELETE FROM Room WHERE roomNumber = ?")) {
+            pstmt.setInt(1, roomId);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No room found with roomNumber: " + roomId);
+                return false;
+            } else {
+                System.out.println("Room with roomNumber " + roomId + " deleted successfully.");
+                writer.write(getCurrentDateTime() + "=> deleteRoom => " + roomId + "\n");
+                writer.flush();
+                return true;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean addTool(Tool tool) throws SQLException {
+        if (!tool.isValid()) {
+            return false;
+        }
+
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "INSERT INTO Tool (name, status) VALUES (?, ?)")) {
+            pstmt.setString(1, tool.getName());
+            pstmt.setString(2, (tool.isAvailable()) ? "Available" : "In Use");
+            pstmt.executeUpdate();
+            System.out.println("Tool " + tool.getName() + " added successfully.");
+            writer.write(getCurrentDateTime() + "=> addTool => " + tool + "\n");
+            writer.flush();
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Tool> getTools() throws SQLException {
+        List<Tool> tools = new ArrayList<>();
+        try (Statement stmt = connectionDB.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Tool")) {
+            while (rs.next()) {
+                String status = rs.getString("status");
+                boolean ava = status.equals("Available");
+                tools.add(new Tool(rs.getString("name"), ava));
+            }
+        }
+        return tools;
+    }
+
+    public boolean deleteTool(String name) throws SQLException {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "DELETE FROM Tool WHERE name = ?")) {
+            pstmt.setString(1, name);
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                return false;
+            } else {
+                writer.write(getCurrentDateTime() + "=> deleteTool => " + name + "\n");
+                writer.flush();
+                return true;
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -14,7 +14,7 @@ public class HospitalManagementUI extends JFrame {
         tabbedPane.addTab("Patient Management", new PatientPanel());
         tabbedPane.addTab("Staff Management", new StaffPanel());
         tabbedPane.addTab("Resource Management", new ResourcePanel());
-        tabbedPane.addTab("Reports", new ReportsPanel());
+        tabbedPane.addTab("Search People", new SearchPanel());
 
         add(tabbedPane, BorderLayout.CENTER);
     }

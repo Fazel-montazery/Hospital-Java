@@ -1,7 +1,7 @@
 package UI;
 
 import people.Patient;
-import buildings.Hospital;
+import means.Hospital;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -33,10 +33,6 @@ public class PatientPanel extends JPanel {
         formPanel.add(new JLabel("Name:"));
         nameField = new JTextField();
         formPanel.add(nameField);
-
-//        formPanel.add(new JLabel("Age:"));
-//        Agefield = new JTextField();
-//        formPanel.add(Agefield);
 
         formPanel.add(new JLabel("NationalID:"));
         nationalId = new JTextField();
@@ -137,11 +133,10 @@ public class PatientPanel extends JPanel {
         if (selectedRow >= 0) {
             // Retrieve new values from the text fields
             String newName = nameField.getText();
-            String newNationalId = nationalId.getText();
             String newCondition = conditionField.getText();
     
             // Get the original NationalID (primary key) from the selected row
-            String originalNationalId = (String) tableModel.getValueAt(selectedRow, 2);
+            String originalNationalId = (String) tableModel.getValueAt(selectedRow, 1);
     
             try {
                 // Call the update method in the Hospital class
@@ -150,7 +145,7 @@ public class PatientPanel extends JPanel {
                 if (updated) {
                     // Update the table with new values
                     tableModel.setValueAt(newName, selectedRow, 0);
-                    tableModel.setValueAt(newNationalId, selectedRow, 1); // If NationalID can be changed
+                    tableModel.setValueAt(originalNationalId, selectedRow, 1); // If NationalID can be changed
                     tableModel.setValueAt(newCondition, selectedRow, 2);
     
                      System.out.println("Patient updated successfully.");

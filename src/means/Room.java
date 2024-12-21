@@ -1,4 +1,4 @@
-package buildings;
+package means;
 
 public class Room {
     private int number;

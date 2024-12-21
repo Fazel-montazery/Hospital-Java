@@ -2,7 +2,7 @@ package UI;
 
 import java.util.List;
 
-import buildings.Hospital;
+import means.Hospital;
 import people.Staff;
 
 import java.awt.*;
@@ -21,7 +21,7 @@ public class StaffPanel extends JPanel {
         setLayout(new BorderLayout());
 
         // Create the table model and table
-        tableModel = new DefaultTableModel(new String[]{"Name", "Role", "NationalId"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Name", "NationalId", "Role"}, 0);
         staffTable = new JTable(tableModel);
         
         // Add the table to a scroll pane
@@ -35,13 +35,13 @@ public class StaffPanel extends JPanel {
         nameField = new JTextField();
         formPanel.add(nameField);
 
-        formPanel.add(new JLabel("Role:"));
-        roleField = new JTextField();
-        formPanel.add(roleField);
-
         formPanel.add(new JLabel("NationalId:"));
         NationalIDField = new JTextField();
         formPanel.add(NationalIDField);
+
+        formPanel.add(new JLabel("Role:"));
+        roleField = new JTextField();
+        formPanel.add(roleField);
 
         // Create the buttons
         JPanel buttonPanel = new JPanel();
@@ -87,7 +87,7 @@ public class StaffPanel extends JPanel {
         try {
             List<Staff> staffList = Hospital.getInstance().getStaff();
             for (Staff staff : staffList) {
-                tableModel.addRow(new Object[]{staff.getName(), staff.getRole(), staff.getNationalId()});
+                tableModel.addRow(new Object[]{staff.getName(), staff.getNationalId(), staff.getRole()});
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,8 +99,8 @@ public class StaffPanel extends JPanel {
         String name = nameField.getText();
         String role = roleField.getText();
         String NationalId = NationalIDField.getText();
-        tableModel.addRow(new Object[]{name, role, NationalId});
-        Staff newStaff = new Staff(name, role, NationalId);
+        tableModel.addRow(new Object[]{name, NationalId, role});
+        Staff newStaff = new Staff(name, NationalId, role);
         try {
                 boolean added = Hospital.getInstance().addStaff(newStaff);
                 if (added) {
@@ -122,18 +122,17 @@ public class StaffPanel extends JPanel {
         if (selectedRow >= 0) {
            String newName = nameField.getText();
            String newRole = roleField.getText();
-           String newNationalId = NationalIDField.getText();
-    
-          String originalNationalId = (String) tableModel.getValueAt(selectedRow, 2);
+
+          String originalNationalId = (String) tableModel.getValueAt(selectedRow, 1);
     
        try {
            boolean updated = Hospital.getInstance().updateStaff(originalNationalId, newName, newRole);
     
            if (updated) {
                tableModel.setValueAt(newName, selectedRow, 0);
-               tableModel.setValueAt(newRole, selectedRow, 1);
-               tableModel.setValueAt(newNationalId, selectedRow, 2);
-    
+               tableModel.setValueAt(originalNationalId, selectedRow, 1);
+               tableModel.setValueAt(newRole, selectedRow, 2);
+
                 System.out.println("Staff updated successfully.");
             } else {
                 System.out.println("Failed to update staff.");
@@ -149,7 +148,7 @@ public class StaffPanel extends JPanel {
         int selectedRow = staffTable.getSelectedRow();
     
         if (selectedRow >= 0) {
-            String nationalId = (String) tableModel.getValueAt(selectedRow, 2);
+            String nationalId = (String) tableModel.getValueAt(selectedRow, 1);
     
             try {
                 boolean deleted = Hospital.getInstance().deleteStaff(nationalId);

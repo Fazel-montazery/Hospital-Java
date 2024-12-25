@@ -1,11 +1,11 @@
 import java.sql.SQLException;
 import javax.swing.SwingUtilities;
-import UI.HospitalManagementUI;
+import UI.LoginPage;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
         SwingUtilities.invokeLater(() -> {
-            HospitalManagementUI ui = new HospitalManagementUI();
+            LoginPage ui = new LoginPage();
             ui.setVisible(true);
         });
     }

@@ -1,13 +1,10 @@
 package UI;
 
 import means.Hospital;
-import means.Room;
 import people.Patient;
 import people.Staff;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;

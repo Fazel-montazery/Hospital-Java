@@ -42,6 +42,10 @@ public final class Hospital {
         }
     }
 
+    public static Connection getConnectionDB() {
+        return connectionDB;
+    }
+
     public static Hospital getInstance() {
         if (instance == null) {
             instance = new Hospital();
@@ -97,6 +101,15 @@ public final class Hospital {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT UNIQUE NOT NULL,
                     status TEXT NOT NULL
+                );
+            """);
+
+            // Create Users table
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS Users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL
                 );
             """);
 
@@ -437,5 +450,39 @@ public final class Hospital {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean signUpUser(String username, String password) {
+        try (PreparedStatement pstmt = connectionDB.prepareStatement(
+                "INSERT INTO Users (username, password) VALUES (?, ?)")) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean signInUser(String username, String password) {
+        List<String> usrs = new ArrayList<>();
+        List<String> pass = new ArrayList<>();
+        try (Statement stmt = connectionDB.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Users")) {
+            while (rs.next()) {
+                String userN = rs.getString("username");
+                String passworD = rs.getString("password");
+                usrs.add(userN);
+                pass.add(passworD);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int i = 0; i < usrs.size(); i++) {
+            if (usrs.get(i).equals(username) && pass.get(i).equals(password))
+                return true;
+        }
+        return false;
     }
 }

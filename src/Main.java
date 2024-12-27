@@ -1,11 +1,12 @@
 import java.sql.SQLException;
 import javax.swing.SwingUtilities;
-import UI.LoginPage;
+
+import UI.LoginAndSignUpPage;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
         SwingUtilities.invokeLater(() -> {
-            LoginPage ui = new LoginPage();
+            LoginAndSignUpPage ui = new LoginAndSignUpPage();
             ui.setVisible(true);
         });
     }
